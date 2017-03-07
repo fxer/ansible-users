@@ -1,0 +1,29 @@
+---
+users_default_shell: '/bin/bash'
+
+# Users to delete
+users_delete: []
+
+# Enables the corresponding entries from groups_available
+groups_enabled:
+  - wheel
+
+# List of available groups (use groups_enable to activate them)
+groups_available:
+  wheel:
+    name: wheel
+    sudoers_config: |
+      %wheel ALL=(ALL) NOPASSWD: ALL
+
+# List of enabled entries from users_available
+users_enabled: []
+
+# List of available users (use users_enabled to activate them)
+# users_available:
+#   someguy:
+#     name: someguy
+#     comment: 'Some Guy'
+#     groups: wheel
+#     ssh_keys:
+#       - 'ssh-rsa xxxxxx some@guy.com'
+users_available: {}

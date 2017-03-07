@@ -1,0 +1,54 @@
+---
+- name: Create groups
+  group:
+    name: "{{ groups_available[item].name }}"
+    gid: "{{ groups_available[item].gid | default(omit) }}"
+    state: present
+  with_items: "{{ groups_enabled }}"
+  loop_control:
+    label: "{{ groups_available[item].name }}"
+
+- name: Create users
+  user:
+    name: "{{ users_available[item].name }}"
+    groups: "{{ users_available[item].groups | default() }}"
+    shell: "{{ users_available[item].shell | default(users_default_shell) }}"
+    comment: "{{ users_available[item].comment | default('Ansible created user') }}"
+    append: yes
+    createhome: "{{ users_available[item].createhome | default('yes') }}"
+    system: "{{ users_available[item].system | default('no') }}"
+    state: present
+  with_items: "{{ users_enabled }}"
+  loop_control:
+    label: "{{ users_available[item].name }}"
+
+- name: Add ssh keys
+  authorized_key:
+    user: "{{ users_available[item].name }}"
+    key: "{{ '\n'.join(users_available[item].ssh_keys) | string }}"
+    state: present
+    exclusive: yes
+  when: users_available[item].ssh_keys is defined
+  with_items: "{{ users_enabled }}"
+  loop_control:
+    label: "{{ users_available[item].name }}"
+
+- name: Create group sudo configs
+  copy:
+    dest: /etc/sudoers.d/{{ groups_available[item].name }}
+    content: "{{ groups_available[item].sudoers_config }}"
+    owner: root
+    group: root
+    mode: 0600
+    validate: 'visudo -cf %s'
+  with_items: "{{ groups_enabled }}"
+  when: groups_available[item].sudoers_config is defined
+  loop_control:
+    label: "{{ groups_available[item].name }}"
+
+- name: Delete users
+  user:
+    name: "{{ item }}"
+    state: absent
+    remove: yes
+  with_items: "{{ users_delete }}"
